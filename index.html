@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Undead Dominion: War for Humanity</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="scanlines"></div>
+  <div id="game-wrapper">
+    <header>
+      <h1 id="game-title">Undead Dominion</h1>
+      <p id="subtitle">War for Humanity</p>
+    </header>
+
+    <div id="hud">
+      <div class="hud-item">
+        <span class="hud-label">HP</span>
+        <div id="health-bar-wrap"><div id="health-bar"></div></div>
+        <span id="health-display">100</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">PATH</span>
+        <span id="path-display">—</span>
+      </div>
+      <div class="hud-item">
+        <span class="hud-label">ITEMS</span>
+        <span id="inventory-display">None</span>
+      </div>
+      <div class="hud-item" id="timer-box" style="display:none;">
+        <span class="hud-label">⚠ TIME</span>
+        <span id="timer-display">10</span>s
+      </div>
+    </div>
+
+    <div id="story-container">
+      <img id="story-image" src="./images/battlefield.png" alt="Story scene" />
+      <div id="text-box">
+        <p id="paragraph1"></p>
+        <p id="paragraph2"></p>
+        <p id="paragraph3"></p>
+      </div>
+      <ul id="inventory-list"></ul>
+      <div id="intel-panel" style="display:none;">
+        <p id="intel-label">📋 INTEL LOG</p>
+        <ul id="intel-list"></ul>
+      </div>
+      <div id="log-journal"></div>
+      <div id="choice-area">
+        <button id="btn-choice1" class="choice-btn">Option A</button>
+        <button id="btn-choice2" class="choice-btn">Option B</button>
+        <button id="btn-choice3" class="choice-btn" style="display:none;">Option C</button>
+      </div>
+
+      <div id="input-area" style="display:none;">
+        <input type="text" id="code-input" placeholder="Enter access code..." maxlength="12" />
+        <button id="btn-submit" class="choice-btn danger">SUBMIT</button>
+      </div>
+
+      <div id="clue-area" style="display:none;">
+        <button id="btn-review" class="choice-btn secondary">📋 Review Intel</button>
+      </div>
+
+    </div>
+
+    <div id="ending-screen" style="display:none;">
+      <div id="ending-badge"></div>
+      <h2 id="ending-title"></h2>
+      <p id="ending-text"></p>
+      <button id="btn-restart" class="choice-btn">↺ PLAY AGAIN</button>
+    </div>
+
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
