@@ -33,10 +33,10 @@ const storyContainer = document.getElementById('story-container');
 let hp             = 100;   // player health
 let inventory      = [];    // items collected
 let intel          = [];    // intel/clues collected
-let currentPath    = '';    // army/lab/survivor
+let currentPath    = '';    // army / lab / survivor
 let weapon         = '';    // which weapon was chosen
 let labCodeTries   = 0;     // wrong lab code attempts
-let labSubPath     = '';    // chosen lab location 
+let labSubPath     = '';    // chosen lab location (hosp/abandoned/sewer/command/radio/nest)
 let countdownTimer = null;  // setInterval reference
 let currentScene   = 'intro';
 
@@ -57,21 +57,21 @@ const SCENES = {
   army_sword:      { img:'./images/energy_sword.png',      text:['The energy sword crackles blue-white in your hand. Close range.', 'The sword cuts clean — but the Boss Walker grabs your arm in its last moment. The bite is small.', 'You finish the fight. Three days later, you understand why that mattered.'], ending:'end_infected', item:'Energy Sword', hp:-10 },
 
   // ── Lab Path ──
-  lab_arrive:      { img:'research_lab.png',      text:['BioLab 4 is still running. Generators hum. Scientists work in full hazmat gear.', '"You came from the source world," the Lead Researcher says. "Your blood is remarkable — no infection markers at all."', '"We can use it. But we need to choose a direction: cure, or control."'],              b1:'Help create a cure', b2:'Help control the zombies', path:'lab', intel:'Pinned to the lab wall: a faded project manifest. The header is torn — only "GEN" is readable. The rest is water-damaged.' },
-  lab_cure:        { img:'lab_cure.png',          text:['The cure requires synthesizing your blood markers with compounds found in the field.', '"We have two location options for the final ingredients," the researcher says.', '"Military Hospital — high risk, high yield. Or the abandoned laboratory — safer but uncertain."'],                   b1:'Go to the Military Hospital', b2:'Go to the Abandoned Laboratory', b3:'Search the Underground Sewer', intel:'A researcher\'s notebook left open: "...compound reacts with GEN-type markers. Cross-ref: Project _SIS, classified above my clearance."' },
-  lab_control:     { img:'lab_control.png',       text:['The control formula rewires the Walker neural network — turning the horde into a controllable force.', '"The synthesis location matters," the researcher says grimly. "Different sites give different results."', '"Military Command Center gives the most power. But the others are... options."'],  b1:'Go to the Military Command Center', b2:'Go to the Radio Tower', b3:'Go to the Zombie Nest', intel:'Scrawled on a whiteboard in red marker: "CONTROL NODE: GEN___IS. DO NOT ERASE." Someone erased the middle three letters anyway.' },
-  lab_terminal:    { img:'lab_terminal.png',      text:['Back at the lab. Everything is ready. Your blood is drawn. The compounds are mixed.', 'The synthesis machine is locked. A single input field blinks on the screen. No label. No instructions.', 'The researcher stares at it. "I never had the clearance. Whatever the code is — it\'s not in any file I\'ve seen."'],  input:true },
-  lab_unlocked:    { img:'lab_unlocked.png',      text:['The machine unlocks. The formula begins synthesizing.', 'The researcher watches the readout. "It\'s working. Whatever you chose — it\'s done."', 'The results are already spreading. There is no going back.'], ending:'lab_resolve' },
+  lab_arrive:      { img:'./images/research_lab.png',      text:['BioLab 4 is still running. Generators hum. Scientists work in full hazmat gear.', '"You came from the source world," the Lead Researcher says. "Your blood is remarkable — no infection markers at all."', '"We can use it. But we need to choose a direction: cure, or control."'],              b1:'Help create a cure', b2:'Help control the zombies', path:'lab', intel:'Pinned to the lab wall: a faded project manifest. The header is torn — only "GEN" is readable. The rest is water-damaged.' },
+  lab_cure:        { img:'./images/lab_cure.png',          text:['The cure requires synthesizing your blood markers with compounds found in the field.', '"We have two location options for the final ingredients," the researcher says.', '"Military Hospital — high risk, high yield. Or the abandoned laboratory — safer but uncertain."'],                   b1:'Go to the Military Hospital', b2:'Go to the Abandoned Laboratory', b3:'Search the Underground Sewer', intel:'A researcher\'s notebook left open: "...compound reacts with GEN-type markers. Cross-ref: Project _SIS, classified above my clearance."' },
+  lab_control:     { img:'./images/lab_control.png',       text:['The control formula rewires the Walker neural network — turning the horde into a controllable force.', '"The synthesis location matters," the researcher says grimly. "Different sites give different results."', '"Military Command Center gives the most power. But the others are... options."'],  b1:'Go to the Military Command Center', b2:'Go to the Radio Tower', b3:'Go to the Zombie Nest', intel:'Scrawled on a whiteboard in red marker: "CONTROL NODE: GEN___IS. DO NOT ERASE." Someone erased the middle three letters anyway.' },
+  lab_terminal:    { img:'./images/lab_terminal.png',      text:['Back at the lab. Everything is ready. Your blood is drawn. The compounds are mixed.', 'The synthesis machine is locked. A single input field blinks on the screen. No label. No instructions.', 'The researcher stares at it. "I never had the clearance. Whatever the code is — it\'s not in any file I\'ve seen."'],  input:true },
+  lab_unlocked:    { img:'./images/lab_unlocked.png',      text:['The machine unlocks. The formula begins synthesizing.', 'The researcher watches the readout. "It\'s working. Whatever you chose — it\'s done."', 'The results are already spreading. There is no going back.'], ending:'lab_resolve' },
 
   // ── Survivor Path ──
-  surv_escape:     { img:'abandoned_city.png',    text:['You run south — away from the army, away from the lab, away from the war.', 'The abandoned city district is quiet compared to the battlefield. Shells of buildings. Empty streets.', 'Then: a sound. Voices. Someone else is alive out here.'],                                                    b1:'Follow the voices — find the survivors', b2:'Stay alone — trust no one', path:'survivor', intel:'Survivor voices detected in the abandoned city district. Someone else made it.' },
-  surv_hub:        { img:'survivor_hub.png',      text:['A group of thirty people in a fortified basement. Families. Workers. A few soldiers who broke away.', '"We\'ve been here for weeks," the leader says. "We need to decide where to go next."', '"There are three possible safe zones. But each one is a gamble."'],                              b1:'Head to the Radio Tower', b2:'Head to the Shopping Mall', b3:'Head to the Underground Subway', intel:'Three possible survivor safe zones: Radio Tower, Shopping Mall, Underground Subway.' },
-  surv_radio:      { img:'radio_tower.png',       text:['The radio tower is broadcasting a signal — coordinates for a cleared extraction zone.', 'Your group makes the trek across three miles of Walker-controlled streets.', 'When you arrive, the extraction team is real. The zone is real. Helicopters are waiting.'],                              b1:'Board the helicopters — leave this world', b2:'Stay and help others reach the zone', hp:-10 },
-  surv_mall:       { img:'shopping_mall.png',     text:['The mall looked safe from the outside. It was not.', 'A horde had already moved in — hundreds of Walkers sealed inside the ventilation system. They flood the ground floor within minutes.', 'Your group scatters. There is no way out. One by one, the screaming stops.'], ending:'end_mall_death', hp:-30 },
-  surv_subway:     { img:'underground_subway.png',text:['The subway tunnels stretch for miles beneath the city — it seems like the perfect shelter.', 'Three days in, your group realizes the tunnels are already infested. Walkers fill every passage, drawn by the echo of footsteps.', 'There is no fighting out of this. There is no way back up. The darkness takes everyone.'], ending:'end_subway_death', hp:-30 },
-  surv_finally:    { img:'finally_end.png',       text:['The survivors have held together through everything. There is one last decision to make.', '"We can\'t stay mobile forever," the leader says. "We pick a permanent path now."', '"Extra protection — defend a camp. Or move the people somewhere safer."'],                                    b1:'Take the extra path — defend a camp', b2:'Lead the people away to safety' },
-  surv_camp:       { img:'defend_camp.png',       text:['You find a defensible position — old factory, thick walls, generator intact.', 'Your group builds a perimeter. Soldiers train civilians. Children learn to be quiet.', 'Month by month, the Walker density outside decreases. The camp holds.'],                                              b1:'Declare it a permanent settlement', b2:'Use it as a staging point to push further', hp:-5 },
-  surv_lead:       { img:'lead_away.png',         text:['You lead the people north — away from the city, toward rumors of an uninfected region.', 'The journey is brutal. You lose three people to Walker encounters. But you keep moving.', 'On the seventh day, the skyline clears. Green. Fields. No Walkers.'],                                    b1:'Settle here — start over', b2:'Keep moving — find other survivors', hp:-15 },
+  surv_escape:     { img:'./images/abandoned_city.png',    text:['You run south — away from the army, away from the lab, away from the war.', 'The abandoned city district is quiet compared to the battlefield. Shells of buildings. Empty streets.', 'Then: a sound. Voices. Someone else is alive out here.'],                                                    b1:'Follow the voices — find the survivors', b2:'Stay alone — trust no one', path:'survivor', intel:'Survivor voices detected in the abandoned city district. Someone else made it.' },
+  surv_hub:        { img:'./images/survivor_hub.png',      text:['A group of thirty people in a fortified basement. Families. Workers. A few soldiers who broke away.', '"We\'ve been here for weeks," the leader says. "We need to decide where to go next."', '"There are three possible safe zones. But each one is a gamble."'],                              b1:'Head to the Radio Tower', b2:'Head to the Shopping Mall', b3:'Head to the Underground Subway', intel:'Three possible survivor safe zones: Radio Tower, Shopping Mall, Underground Subway.' },
+  surv_radio:      { img:'./images/radio_tower.png',       text:['The radio tower is broadcasting a signal — coordinates for a cleared extraction zone.', 'Your group makes the trek across three miles of Walker-controlled streets.', 'When you arrive, the extraction team is real. The zone is real. Helicopters are waiting.'],                              b1:'Board the helicopters — leave this world', b2:'Stay and help others reach the zone', hp:-10 },
+  surv_mall:       { img:'./images/shopping_mall.png',     text:['The mall looked safe from the outside. It was not.', 'A horde had already moved in — hundreds of Walkers sealed inside the ventilation system. They flood the ground floor within minutes.', 'Your group scatters. There is no way out. One by one, the screaming stops.'], ending:'end_mall_death', hp:-30 },
+  surv_subway:     { img:'./images/underground_subway.png',text:['The subway tunnels stretch for miles beneath the city — it seems like the perfect shelter.', 'Three days in, your group realizes the tunnels are already infested. Walkers fill every passage, drawn by the echo of footsteps.', 'There is no fighting out of this. There is no way back up. The darkness takes everyone.'], ending:'end_subway_death', hp:-30 },
+  surv_finally:    { img:'./images/finally_end.png',       text:['The survivors have held together through everything. There is one last decision to make.', '"We can\'t stay mobile forever," the leader says. "We pick a permanent path now."', '"Extra protection — defend a camp. Or move the people somewhere safer."'],                                    b1:'Take the extra path — defend a camp', b2:'Lead the people away to safety' },
+  surv_camp:       { img:'./images/defend_camp.png',       text:['You find a defensible position — old factory, thick walls, generator intact.', 'Your group builds a perimeter. Soldiers train civilians. Children learn to be quiet.', 'Month by month, the Walker density outside decreases. The camp holds.'],                                              b1:'Declare it a permanent settlement', b2:'Use it as a staging point to push further', hp:-5 },
+  surv_lead:       { img:'./images/lead_away.png',         text:['You lead the people north — away from the city, toward rumors of an uninfected region.', 'The journey is brutal. You lose three people to Walker encounters. But you keep moving.', 'On the seventh day, the skyline clears. Green. Fields. No Walkers.'],                                    b1:'Settle here — start over', b2:'Keep moving — find other survivors', hp:-15 },
 };
 
 // ── Button Routing Maps ──────────────────────────────────────
@@ -199,7 +199,7 @@ function addIntel(clue) {
 function appendJournal(text) {
   var entry = document.createElement('p');
   entry.textContent = text;
-  logJournal.appendChild(entry);
+  logJournal.appendChild(entry); 
   logJournal.scrollTop = logJournal.scrollHeight;
 }
 
@@ -209,7 +209,6 @@ function appendJournal(text) {
 function showIntelPanel() {
   intelList.innerHTML = ''; 
 
-  // for loop builds the intel list from the intel array
   for (var i = 0; i < intel.length; i++) {
     var li = document.createElement('li');
     li.textContent = '[' + (i + 1) + '] ' + intel[i];
@@ -284,24 +283,18 @@ function checkLabCode() {
 }
 
 // ── FUNCTION 12: loadScene(name) ────────────────────────────
-// Central scene manager. Looks up scene data, applies all effects,
-// handles special cases (endings, input, countdown, weapon scenes).
+// Central scene manager. Looks up scene data, applies all effects, handles special cases (endings, input, countdown, weapon scenes).
 function loadScene(name) {
   try {
     currentScene = name;
     clearInterval(countdownTimer);
     timerBox.style.display = 'none';
-
-    // Hide intel panel and review button on every new scene load.
-    // The button reappears only if addIntel() is called for this scene.
     intelPanel.style.display = 'none';
     clueArea.style.display   = 'none';
 
     // Check if this is a direct ending trigger
     if (ENDINGS[name]) return triggerEnding(name);
 
-    // Special: lab path branches after terminal based on which sub-path was chosen
-    // Lab path endings — resolve based on stored labSubPath
     if (name === 'lab_resolve') {
       var endMap = {
         lab_hosp: 'end_cure_success', lab_abandoned: 'end_survive_nocure',
@@ -323,7 +316,6 @@ function loadScene(name) {
     if (s.item)  { addItem(s.item); weapon = s.item; }
     if (s.intel) addIntel(s.intel);
     if (s.delay) setTimeout(function() { appendJournal('> ' + s.delay); }, 2500);
-    // If scene has a direct ending, show image/text briefly then trigger it
     if (s.ending) {
       var endTarget = s.ending;
       var capturedSubPath = labSubPath; 
@@ -376,6 +368,7 @@ function loadScene(name) {
 }
 
 // ── Event Listeners ──────────────────────────────────────────
+
 // EL 1 — Button 1: advance via BTN1_MAP
 btn1.addEventListener('click', function() {
   if (currentScene === 'lab_cure')    labSubPath = 'lab_hosp';
@@ -502,6 +495,7 @@ healthDisplay.addEventListener('click', function() {
 inventoryDisp.addEventListener('click', function() {
   if (!inventory.length) { appendJournal('> Nothing in your pockets.'); return; }
   appendJournal('> FULL INVENTORY:');
+  // for loop prints each item when inventory display is clicked
   for (var i = 0; i < inventory.length; i++) {
     appendJournal('   [' + (i + 1) + '] ' + inventory[i]);
   }
@@ -517,4 +511,52 @@ pathDisplay.addEventListener('click', function() {
   appendJournal(messages[currentPath] || '> No path chosen yet.');
 });
 
+// ── Start the game ───────────────────────────────────────────
 loadScene('intro');
+
+// Background music — loops continuously during gameplay
+var bgMusic = new Audio('./sounds/background.wav');
+bgMusic.loop = true;
+bgMusic.volume = 0.35;
+
+// Sound effects
+var sfxDamage  = new Audio('sounds/damage.wav');      // taking damage
+var sfxSuccess = new Audio('sounds/success.wav');     // correct code / good ending
+var sfxDeath   = new Audio('sounds/death.wav');       // death ending
+var sfxEnding  = new Audio('sounds/ending.wav');      // any ending screen
+
+// Start music on first user interaction — browsers block autoplay before this
+document.addEventListener('click', function startMusic() {
+  bgMusic.play().catch(function() {});
+  document.removeEventListener('click', startMusic);
+}, { once: true });
+
+// Play damage sound whenever HP drops — patch into updateHP via MutationObserver
+var lastHP = 100;
+var hpObserver = new MutationObserver(function() {
+  var current = parseInt(healthDisplay.textContent);
+  if (current < lastHP) { sfxDamage.currentTime = 0; sfxDamage.play().catch(function(){}); }
+  lastHP = current;
+});
+hpObserver.observe(healthDisplay, { childList: true, characterData: true, subtree: true });
+
+// Play ending sounds when the ending screen appears
+var endObserver = new MutationObserver(function() {
+  if (endingScreen.style.display === 'block') {
+    var title = endingTitle.textContent;
+    if (title.includes('DEATH') || title.includes('OVERRUN') || title.includes('INFECTED') || title.includes('LONELY')) {
+      sfxDeath.currentTime = 0; sfxDeath.play().catch(function(){});
+    } else {
+      sfxSuccess.currentTime = 0; sfxSuccess.play().catch(function(){});
+    }
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
+  }
+});
+endObserver.observe(endingScreen, { attributes: true, attributeFilter: ['style'] });
+
+// Resume music when player restarts
+btnRestart.addEventListener('click', function() {
+  bgMusic.currentTime = 0;
+  bgMusic.play().catch(function(){});
+});
